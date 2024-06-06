@@ -15,7 +15,7 @@ use Filament\Models\Contracts\HasAvatar;
 
 class User extends Authenticatable implements HasAvatar
 {
-    use HasFactory, Notifiable, SoftDeletes, HasRoles, HasPanelShield;
+    use HasFactory, Notifiable, SoftDeletes, HasRoles;
 
     /**
      * The attributes that are mass assignable.
