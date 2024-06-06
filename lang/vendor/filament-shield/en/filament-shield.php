@@ -34,8 +34,8 @@ return [
     'nav.group' => 'Authorization',
     'nav.role.label' => 'Roles Access',
     'nav.role.icon' => 'heroicon-o-shield-check',
-    'resource.label.role' => 'Role',
-    'resource.label.roles' => 'Roles',
+    'resource.label.role' => 'role',
+    'resource.label.roles' => 'roles',
 
     /*
     |--------------------------------------------------------------------------
