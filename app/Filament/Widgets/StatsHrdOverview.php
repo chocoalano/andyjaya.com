@@ -6,7 +6,7 @@ use App\Models\Departement;
 use App\Models\Level;
 use App\Models\PermissionForm;
 use App\Models\Position;
-use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Carbon\CarbonPeriod;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -14,7 +14,7 @@ use Illuminate\Support\Carbon;
 
 class StatsHrdOverview extends BaseWidget
 {
-    use HasPageShield;
+    use HasWidgetShield;
     protected static ?string $pollingInterval = '10s';
     protected static ?int $sort = 1;
     protected function getStats(): array

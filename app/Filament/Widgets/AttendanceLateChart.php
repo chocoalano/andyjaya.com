@@ -3,14 +3,14 @@
 namespace App\Filament\Widgets;
 
 use App\Models\AttendanceIn;
-use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Carbon\CarbonPeriod;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Carbon;
 
 class AttendanceLateChart extends ChartWidget
 {
-    use HasPageShield;
+    use HasWidgetShield;
     protected static ?string $heading = 'Attendance';
     protected static ?int $sort = 2;
 

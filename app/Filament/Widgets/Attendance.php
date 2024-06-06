@@ -3,14 +3,14 @@
 namespace App\Filament\Widgets;
 
 use App\Models\AttendanceIn;
-use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 
 class Attendance extends BaseWidget
 {
-    use HasPageShield;
+    use HasWidgetShield;
     protected static ?int $sort = 4;
     protected int | string | array $columnSpan = 'full';
     public function table(Table $table): Table
