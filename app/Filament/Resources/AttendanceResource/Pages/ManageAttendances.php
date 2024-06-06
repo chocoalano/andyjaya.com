@@ -70,7 +70,7 @@ class ManageAttendances extends ManageRecords
             })
             ->using(function (array $data): Model {
                 $q = new AttendanceIn();
-                if ($data['user_id'] === auth()->id()) {
+                if ((int)$data['user_id'] === auth()->id()) {
                     $validateArea = AttArea::whereHas('user', function ($query) use ($data){
                         $query->where('user_id', $data['user_id']);
                     });
