@@ -3,12 +3,14 @@
 namespace App\Filament\Widgets;
 
 use App\Models\AttendanceIn;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\CarbonPeriod;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Carbon;
 
 class AttendanceUnlateChart extends ChartWidget
 {
+    use HasPageShield;
     protected static ?string $heading = 'Attendance';
     protected static ?int $sort = 3;
 
