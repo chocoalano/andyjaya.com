@@ -9,14 +9,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Permission\Traits\HasRoles;
-use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Spatie\Permission\Models\Role;
 use Filament\Models\Contracts\HasAvatar;
-use Filament\Models\Contracts\FilamentUser;
 
-class User extends Authenticatable implements HasAvatar, FilamentUser
+class User extends Authenticatable implements HasAvatar
 {
-    use HasFactory, Notifiable, SoftDeletes, HasRoles, HasPanelShield;
+    use HasFactory, Notifiable, SoftDeletes, HasRoles;
 
     /**
      * The attributes that are mass assignable.
