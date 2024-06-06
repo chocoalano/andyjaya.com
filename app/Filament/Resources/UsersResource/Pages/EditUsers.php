@@ -36,7 +36,7 @@ class EditUsers extends EditRecord
     {
         try {
             $u = \App\Models\User::find($record->id);
-            if ($data['new_password'] !== null) {
+            if (isset($data['new_password'])) {
                 $u->password = Hash::make($data['new_password']);
             }
             $u->departemen_id = $data['departemen_id'];
