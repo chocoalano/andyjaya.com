@@ -12,10 +12,11 @@ use Spatie\Permission\Traits\HasRoles;
 use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Spatie\Permission\Models\Role;
 use Filament\Models\Contracts\HasAvatar;
+use Filament\Models\Contracts\FilamentUser;
 
-class User extends Authenticatable implements HasAvatar
+class User extends Authenticatable implements HasAvatar, FilamentUser
 {
-    use HasFactory, Notifiable, SoftDeletes, HasRoles;
+    use HasFactory, Notifiable, SoftDeletes, HasRoles, HasPanelShield;
 
     /**
      * The attributes that are mass assignable.
