@@ -6,7 +6,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Permission\Traits\HasRoles;
@@ -14,7 +13,7 @@ use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Spatie\Permission\Models\Role;
 use Filament\Models\Contracts\HasAvatar;
 
-class User extends Authenticatable implements HasAvatar, FilamentUser
+class User extends Authenticatable implements HasAvatar
 {
     use HasFactory, Notifiable, SoftDeletes, HasRoles, HasPanelShield;
 
