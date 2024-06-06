@@ -7,6 +7,7 @@ use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Hash;
 
 class EditUsers extends EditRecord
 {
@@ -25,7 +26,7 @@ class EditUsers extends EditRecord
     {
         if(!is_null($data['password'])){
             if($data['password'] === $data['password_confirmation']){
-                $data['password'] = bcrypt($data['password']);
+                $data['password'] = Hash::make($data['password']);
             }
         }
         return $data;
