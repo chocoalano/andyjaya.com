@@ -26,7 +26,7 @@ class EditUsers extends EditRecord
     {
         if(!is_null($data['password'])){
             if($data['password'] === $data['password_confirmation']){
-                $data['password'] = Hash::make($data['password']);
+                $data['new_password'] = $data['password'];
             }
         }
         return $data;
@@ -36,8 +36,8 @@ class EditUsers extends EditRecord
     {
         try {
             $u = \App\Models\User::find($record->id);
-            if ($data['password'] !== null) {
-                $u->password = bcrypt($data['password']);
+            if ($data['new_password'] !== null) {
+                $u->password = Hash::make($data['new_password']);
             }
             $u->departemen_id = $data['departemen_id'];
             $u->position_id = $data['position_id'];
