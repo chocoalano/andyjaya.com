@@ -10,13 +10,17 @@ use App\Models\User;
 use App\Models\UserAttGroup;
 use App\Models\UserAttGroupSchedule;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use DateTime;
 use Filament\Forms;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Carbon;
+use Malzariey\FilamentDaterangepickerFilter\Fields\DateRangePicker;
 use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 
 class PayrollResource extends Resource implements HasShieldPermissions
@@ -53,72 +57,89 @@ class PayrollResource extends Resource implements HasShieldPermissions
             ->schema([
                 Forms\Components\Fieldset::make('Calculate Basic Payroll')
                 ->schema([
+                    DateRangePicker::make('periode')->separator(' - ')->required(),
                     Forms\Components\Select::make('user_id')
                         ->relationship('user', 'name')
                         ->reactive()
-                        ->afterStateUpdated(function (Set $set, ?int $state) {
-                            $userGroup = UserAttGroup::whereHas('userTeams', function ($query) use ($state) {
-                                $query->where('user_id', $state);
-                            })->first();
-                            if($userGroup){
-                                $total_schedule = UserAttGroupSchedule::where('user_att_group_id', $userGroup->id)
-                                ->whereYear('date_work', date('Y'))
-                                ->whereMonth('date_work', date('m'))
-                                ->count('*');
+                        ->afterStateUpdated(function (Get $get, Set $set, ?int $state) {
+                            $periode = $get('periode');
+                            if ($periode) {
+                                $userGroup = UserAttGroup::whereHas('userTeams', function ($query) use ($state) {
+                                    $query->where('user_id', $state);
+                                })->first();
+                                $dateArray = explode(" - ", $periode);
+                                $date1 = DateTime::createFromFormat('d/m/Y', $dateArray[0])->format('Y-m-d');
+                                $date2 = DateTime::createFromFormat('d/m/Y', $dateArray[1])->format('Y-m-d');
+                                $dateArrayResult = array(
+                                    'date1' => $date1,
+                                    'date2' => $date2
+                                );
+                                if($userGroup){
+                                    $total_schedule = UserAttGroupSchedule::where('user_att_group_id', $userGroup->id)
+                                    ->where('date_work', '>=', $dateArrayResult['date1'])
+                                    ->where('date_work', '<=', $dateArrayResult['date1'])
+                                    ->count('*');
 
-                                $total_present = AttendanceIn::where('user_id', $state)
-                                ->whereYear('created_at', date('Y'))
-                                ->whereMonth('created_at', date('m'))
-                                ->whereHas('pulang', function ($query) {
-                                    $query
+                                    $total_present = AttendanceIn::where('user_id', $state)
                                     ->whereYear('created_at', date('Y'))
-                                    ->whereMonth('created_at', date('m'));
-                                })
-                                ->count('*');
+                                    ->whereMonth('created_at', date('m'))
+                                    ->whereHas('pulang', function ($query) {
+                                        $query
+                                        ->whereYear('created_at', date('Y'))
+                                        ->whereMonth('created_at', date('m'));
+                                    })
+                                    ->count('*');
 
-                                $total_late = AttendanceIn::where('user_id', $state)
-                                ->where('status', 'late')
-                                ->whereYear('created_at', date('Y'))
-                                ->whereMonth('created_at', date('m'))
-                                ->whereHas('pulang', function ($query) {
-                                    $query
+                                    $total_late = AttendanceIn::where('user_id', $state)
+                                    ->where('status', 'late')
                                     ->whereYear('created_at', date('Y'))
-                                    ->whereMonth('created_at', date('m'));
-                                })
-                                ->count('*');
+                                    ->whereMonth('created_at', date('m'))
+                                    ->whereHas('pulang', function ($query) {
+                                        $query
+                                        ->whereYear('created_at', date('Y'))
+                                        ->whereMonth('created_at', date('m'));
+                                    })
+                                    ->count('*');
 
-                                $total_unlate = AttendanceIn::where('user_id', $state)
-                                ->where('status', 'unlate')
-                                ->whereYear('created_at', date('Y'))
-                                ->whereMonth('created_at', date('m'))
-                                ->whereHas('pulang', function ($query) {
-                                    $query
+                                    $total_unlate = AttendanceIn::where('user_id', $state)
+                                    ->where('status', 'unlate')
                                     ->whereYear('created_at', date('Y'))
-                                    ->whereMonth('created_at', date('m'));
-                                })
-                                ->count('*');
+                                    ->whereMonth('created_at', date('m'))
+                                    ->whereHas('pulang', function ($query) {
+                                        $query
+                                        ->whereYear('created_at', date('Y'))
+                                        ->whereMonth('created_at', date('m'));
+                                    })
+                                    ->count('*');
 
-                                $total_early = AttendanceIn::where('user_id', $state)
-                                ->where('status', 'early')
-                                ->whereYear('created_at', date('Y'))
-                                ->whereMonth('created_at', date('m'))
-                                ->whereHas('pulang', function ($query) {
-                                    $query
+                                    $total_early = AttendanceIn::where('user_id', $state)
+                                    ->where('status', 'early')
                                     ->whereYear('created_at', date('Y'))
-                                    ->whereMonth('created_at', date('m'));
-                                })
-                                ->count('*');
+                                    ->whereMonth('created_at', date('m'))
+                                    ->whereHas('pulang', function ($query) {
+                                        $query
+                                        ->whereYear('created_at', date('Y'))
+                                        ->whereMonth('created_at', date('m'));
+                                    })
+                                    ->count('*');
 
-                                $user = User::find($state);
+                                    $user = User::find($state);
 
-                                $subtotal_payroll = round(((float)$user->total_salary / (int)$total_schedule)*(int)$total_present, 2);
+                                    $subtotal_payroll = round(((float)$user->total_salary / (int)$total_schedule)*(int)$total_present, 2);
 
-                                $set('total_schedule', $total_schedule);
-                                $set('total_present', $total_present);
-                                $set('total_late', $total_late);
-                                $set('total_unlate', $total_unlate);
-                                $set('total_early', $total_early);
-                                $set('subtotal_payroll', $subtotal_payroll);
+                                    $set('total_schedule', $total_schedule);
+                                    $set('total_present', $total_present);
+                                    $set('total_late', $total_late);
+                                    $set('total_unlate', $total_unlate);
+                                    $set('total_early', $total_early);
+                                    $set('subtotal_payroll', $subtotal_payroll);
+                                }
+                            }else{
+                                $set('user_id', null);
+                                Notification::make()
+                                ->title('Select the period first, after that you select the user!')
+                                ->danger()
+                                ->send();
                             }
                         })
                         ->required(),
@@ -137,12 +158,12 @@ class PayrollResource extends Resource implements HasShieldPermissions
                     Forms\Components\TextInput::make('total_early')
                         ->required()
                         ->numeric(),
-                    Forms\Components\TextInput::make('subtotal_payroll')
-                        ->required()
-                        ->numeric(),
-                    Forms\Components\TextInput::make('total_payroll')
+                    TextInput::make('subtotal_payroll')
+                        ->currencyMask(thousandSeparator: ',',decimalSeparator: '.',precision: 2)
+                        ->required(),
+                    TextInput::make('total_payroll')
                         ->disabled()
-                        ->numeric(),
+                        ->currencyMask(thousandSeparator: ',',decimalSeparator: '.',precision: 2),
                 ]),
                 Forms\Components\Fieldset::make('Calculate Components Payroll')
                 ->schema([
@@ -157,7 +178,9 @@ class PayrollResource extends Resource implements HasShieldPermissions
                                     'times' => 'Times (x)',
                                 ])
                                 ->required(),
-                            Forms\Components\TextInput::make('amount')->numeric()->minLength(0)->required(),
+                            TextInput::make('amount')
+                                ->currencyMask(thousandSeparator: ',',decimalSeparator: '.',precision: 2)
+                                ->required(),
                         ])
                         ->columns(3)
                         ->columnSpanFull()

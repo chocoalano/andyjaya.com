@@ -13,6 +13,8 @@ class Payroll extends Model
     protected $table = 'payrolls';
     protected $fillable = [
         'user_id',
+        'start_periode',
+        'end_periode',
         'total_schedule',
         'total_present',
         'total_late',

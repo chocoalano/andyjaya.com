@@ -4,6 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UsersResource\Pages;
 use App\Filament\Resources\UsersResource\RelationManagers;
+use App\Models\Departement;
+use App\Models\Level;
+use App\Models\Position;
 use App\Models\User;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
@@ -137,6 +140,36 @@ class UsersResource extends Resource implements HasShieldPermissions
             ->searchable()
             ->options(
                 fn (): array => \Spatie\Permission\Models\Role::query()
+                ->pluck('name', 'id')
+                ->all()
+            ),
+            Tables\Filters\SelectFilter::make('departement')
+            ->relationship('departement', 'name')
+            ->multiple()
+            ->preload()
+            ->searchable()
+            ->options(
+                fn (): array => Departement::query()
+                ->pluck('name', 'id')
+                ->all()
+            ),
+            Tables\Filters\SelectFilter::make('position')
+            ->relationship('position', 'name')
+            ->multiple()
+            ->preload()
+            ->searchable()
+            ->options(
+                fn (): array => Position::query()
+                ->pluck('name', 'id')
+                ->all()
+            ),
+            Tables\Filters\SelectFilter::make('level')
+            ->relationship('level', 'name')
+            ->multiple()
+            ->preload()
+            ->searchable()
+            ->options(
+                fn (): array => Level::query()
                 ->pluck('name', 'id')
                 ->all()
             )

@@ -5,8 +5,8 @@ namespace App\Filament\Resources\PayrollResource\Pages;
 use App\Filament\Resources\PayrollResource;
 use App\Models\Payroll;
 use App\Models\PayrollComponent;
+use DateTime;
 use Filament\Actions;
-use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +20,9 @@ class ManagePayrolls extends ManageRecords
         return [
             Actions\CreateAction::make()
             ->using(function (array $data, string $model): Model {
+                $dateArray = explode(" - ", $data['periode']);
+                $start = DateTime::createFromFormat('d/m/Y', $dateArray[0])->format('Y-m-d');
+                $end = DateTime::createFromFormat('d/m/Y', $dateArray[1])->format('Y-m-d');
                 try {
                     DB::beginTransaction();
                     $total = $data['subtotal_payroll'];
@@ -36,6 +39,8 @@ class ManagePayrolls extends ManageRecords
                     }
                     $q = new Payroll();
                     $q->user_id = $data['user_id'];
+                    $q->start_periode = $start;
+                    $q->end_periode = $end;
                     $q->total_schedule = $data['total_schedule'];
                     $q->total_present = $data['total_present'];
                     $q->total_late = $data['total_late'];

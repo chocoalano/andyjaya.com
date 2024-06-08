@@ -3,24 +3,23 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\AttendanceResource\Pages;
-use App\Filament\Resources\AttendanceResource\RelationManagers;
+use App\Models\AttArea;
 use App\Models\AttendanceIn;
-use App\Models\AttendanceOut;
-use ArberMustafa\FilamentLocationPickrField\Forms\Components\LocationPickr;
+use App\Models\Departement;
+use App\Models\Level;
+use App\Models\Position;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
-use Carbon\Carbon;
-use DateTime;
-use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 
 class AttendanceResource extends Resource implements HasShieldPermissions
 {
@@ -43,10 +42,8 @@ class AttendanceResource extends Resource implements HasShieldPermissions
             'view_any',
             'create',
             'update',
-            'replicate',
             'delete',
-            'delete_any',
-            'lock'
+            'delete_any'
         ];
     }
 
@@ -54,6 +51,68 @@ class AttendanceResource extends Resource implements HasShieldPermissions
     {
         return $form
             ->schema([
+                Section::make("Presence In")
+                    ->columns(['sm' => 1,'xl' => 2,'2xl' => 3])
+                    ->schema([
+                        Select::make('user_id')
+                            ->label('Choose User')
+                            ->searchable()
+                            ->preload()
+                            ->relationship('user', 'name')
+                            ->required(),
+                        Select::make('area_id')
+                            ->label('Choose Area')
+                            ->searchable()
+                            ->preload()
+                            ->options(AttArea::all()->pluck('name', 'id'))
+                            ->required(),
+                        Select::make('att_group_schedule_id')
+                            ->label('Choose Schedule')
+                            ->searchable()
+                            ->preload()
+                            ->relationship('schedule', 'date_work')
+                            ->required(),
+                        TextInput::make('lat')->numeric()->required(),
+                        TextInput::make('lng')->numeric()->required(),
+                        TimePicker::make('time')->required(),
+                        FileUpload::make('photo')
+                            ->image()
+                            ->imageEditor()
+                            ->directory('attendance-in')
+                            ->required()
+                            ->columnSpanFull(),
+                    ]),
+                Section::make("Presence Out")
+                    ->columns(['sm' => 1,'xl' => 2,'2xl' => 3])
+                    ->schema([
+                        Select::make('pulang.user_id')
+                            ->label('Choose User')
+                            ->searchable()
+                            ->preload()
+                            ->relationship('user', 'name')
+                            ->required(),
+                        Select::make('pulang.area_id')
+                            ->label('Choose Area')
+                            ->searchable()
+                            ->preload()
+                            ->options(AttArea::all()->pluck('name', 'id'))
+                            ->required(),
+                        Select::make('pulang.att_group_schedule_id')
+                            ->label('Choose Schedule')
+                            ->searchable()
+                            ->preload()
+                            ->relationship('schedule', 'date_work')
+                            ->required(),
+                        TextInput::make('pulang.lat')->numeric()->required(),
+                        TextInput::make('pulang.lng')->numeric()->required(),
+                        TimePicker::make('pulang.time')->required(),
+                        FileUpload::make('pulang.photo')
+                            ->image()
+                            ->imageEditor()
+                            ->directory('attendance-out')
+                            ->required()
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
@@ -62,31 +121,32 @@ class AttendanceResource extends Resource implements HasShieldPermissions
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('photo')
+                    ->label('Photo In')
+                    ->square(),
+                Tables\Columns\ImageColumn::make('pulang.photo')
+                    ->label('Photo Out')
                     ->square(),
                 Tables\Columns\TextColumn::make('user.name')
+                    ->searchable()
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('schedule.date_work')
+                    ->searchable()
                     ->date()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lat')
-                    ->description(fn (AttendanceIn $record): string => $record->pulang ? $record->pulang->lat :'Belum Pulang')
-                    ->numeric()
+                    ->label('Latitude')
+                    ->description(fn (AttendanceIn $record): string => !is_null($record->pulang->lat) ? $record->pulang->lat :'Belum Pulang')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lng')
-                    ->description(fn (AttendanceIn $record): string => $record->pulang ? $record->pulang->lng :'Belum Pulang')
-                    ->numeric()
+                    ->label('Longitude')
+                    ->description(fn (AttendanceIn $record): string => !is_null($record->pulang->lng) ? $record->pulang->lng :'Belum Pulang')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('time')
-                    ->description(fn (AttendanceIn $record): string => $record->pulang ? $record->pulang->time :'Belum Pulang'),
+                    ->description(fn (AttendanceIn $record): string => !is_null($record->pulang->time) ? $record->pulang->time :'Belum Pulang'),
                 Tables\Columns\TextColumn::make('status')
-                    ->description(fn (AttendanceIn $record): string => $record->pulang ? $record->pulang->status :'Belum Pulang')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'unlate' => 'warning',
-                        'early' => 'success',
-                        'late' => 'danger',
-                    }),
+                    ->searchable()
+                    ->description(fn (AttendanceIn $record): string => !is_null($record->pulang->status) ? $record->pulang->status :'Belum Pulang'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -97,83 +157,46 @@ class AttendanceResource extends Resource implements HasShieldPermissions
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                DateRangeFilter::make('created_at'),
+                Tables\Filters\SelectFilter::make('departement')
+                ->relationship('departement', 'name')
+                ->multiple()
+                ->preload()
+                ->searchable()
+                ->options(
+                    fn (): array => Departement::query()
+                    ->pluck('name', 'id')
+                    ->all()
+                ),
+                Tables\Filters\SelectFilter::make('position')
+                ->relationship('position', 'name')
+                ->multiple()
+                ->preload()
+                ->searchable()
+                ->options(
+                    fn (): array => Position::query()
+                    ->pluck('name', 'id')
+                    ->all()
+                ),
+                Tables\Filters\SelectFilter::make('level')
+                ->relationship('level', 'name')
+                ->multiple()
+                ->preload()
+                ->searchable()
+                ->options(
+                    fn (): array => Level::query()
+                    ->pluck('name', 'id')
+                    ->all()
+                )
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                ->label("Attendance Out")
-                ->icon("fas-fingerprint")
-                ->mutateRecordDataUsing(function (array $data): array {
-                    $jam_sekarang = Carbon::now()->setTimezone('Asia/Jakarta')->format('H:i:s');
-                    $data['time'] = $jam_sekarang;
-                    $data['lat'] = null;
-                    $data['lng'] = null;
-                    $data['location'] = null;
-                    $data['photo'] = null;
+                ->mutateRecordDataUsing(function (array $data, AttendanceIn $record): array {
+                    $data['pulang']=$record->pulang;
                     return $data;
-                })
-                ->form([
-                    Section::make("Attendance Out")
-                    ->columns([
-                        'sm' => 1,
-                        'xl' => 2,
-                        '2xl' => 2,
-                    ])
-                    ->schema([
-                        Select::make('user_id')
-                            ->label('Choose User')
-                            ->searchable()
-                            ->preload()
-                            ->relationship('user', 'name')
-                            ->required(),
-                        Select::make('att_group_schedule_id')
-                            ->label('Choose Schedule')
-                            ->searchable()
-                            ->preload()
-                            ->relationship('schedule', 'date_work')
-                            ->required(),
-                        LocationPickr::make('location')
-                        ->columnSpanFull(),
-                        TimePicker::make('time')
-                            ->disabled()
-                            ->columnSpanFull()
-                            ->required(),
-                        FileUpload::make('photo')
-                            ->image()
-                            ->imageEditor()
-                            ->directory('attendance-out')
-                            ->required()
-                            ->columnSpanFull(),
-                    ])
-                ])
-                ->using(function (Model $record, array $data): Model {
-                    $jam_sekarang = Carbon::now()->setTimezone('Asia/Jakarta')->format('H:i:s');
-                    $c = DB::table('att_group_schedule as ags')
-                    ->join('att_times as at','ags.att_time_id','=','at.id')
-                    ->where('ags.id','=', $data['att_group_schedule_id'])
-                    ->select('at.out')
-                    ->first();
-                    $waktu_masuk_seharusnya = new DateTime($c->out);
-                    $waktu_masuk_sebenarnya = new DateTime($jam_sekarang);
-                    $selisih = $waktu_masuk_sebenarnya->diff($waktu_masuk_seharusnya);
-                    if ($waktu_masuk_sebenarnya > $waktu_masuk_seharusnya) {
-                        $status = 'late';
-                    }elseif($waktu_masuk_sebenarnya < $waktu_masuk_seharusnya){
-                        $status = 'early';
-                    }else{
-                        $status = 'unlate';
-                    }
-                    $q = AttendanceIn::find($record->id);
-
-                    $q->pulang()->create([
-                        'user_id' => $data['user_id'],
-                        'att_group_schedule_id' => $data['att_group_schedule_id'],
-                        'location' => $data['location'],
-                        'time' => $jam_sekarang,
-                        'difference' => $selisih->format('%H:%I:%S'),
-                        'photo' => $data['photo'],
-                        'status' => $status,
-                    ]);
+                })->using(function (Model $record, array $data): Model {
+                    $record->update($data);
+                    $record->pulang->update($data['pulang']);
              
                     return $record;
                 }),

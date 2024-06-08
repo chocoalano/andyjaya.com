@@ -7,6 +7,7 @@
     "require": {
         "php": "^8.2",
         "arbermustafa/filament-locationpickr-field": "^2.0",
+        "ariaieboy/filament-currency": "^1.8",
         "aymanalhattami/filament-slim-scrollbar": "^2.0",
         "barryvdh/laravel-dompdf": "^2.2",
         "bezhansalleh/filament-shield": "^3.2",
@@ -16,7 +17,7 @@
         "laravel/reverb": "@beta",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.4",
-        "malzariey/filament-daterangepicker-filter": "^2.6",
+        "malzariey/filament-daterangepicker-filter": "^2.7",
         "owenvoke/blade-fontawesome": "^2.6",
         "phpoffice/phpspreadsheet": "^2.1"
     },

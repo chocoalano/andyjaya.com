@@ -176,6 +176,26 @@
                     $formatted_number = 'Rp ' . $formatted_number;
                     return $formatted_number;
                 }
+                function operator($opr) {
+                    switch ($opr) {
+                        case 'minus':
+                            return '(-)';
+                            break;
+                        case 'plus':
+                            return '(+)';
+                            break;
+                        case 'devide':
+                            return '(:)';
+                            break;
+                        case 'times':
+                            return '(x)';
+                            break;
+                        
+                        default:
+                            return $opr;
+                            break;
+                    }
+                }
             @endphp 
             <tr class="item">
                 <td>Subtotal</td>
@@ -184,7 +204,7 @@
             @foreach ($component as $k => $v)
             <tr class="item">
                 <td>{{ $v->title }}</td>
-                <td>{{ format_rupiah($v->amount) }}</td>
+                <td>{{ operator($v->operator) }} {{ format_rupiah($v->amount) }}</td>
             </tr>
             @endforeach
             <tr class="total">
