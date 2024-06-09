@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 class AttendanceLateChart extends ChartWidget
 {
     use HasWidgetShield;
-    protected static ?string $heading = 'Attendance';
+    protected static ?string $heading = 'Attendance In';
     protected static ?int $sort = 2;
 
     protected function getData(): array
@@ -35,7 +35,7 @@ class AttendanceLateChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Attendance in',
+                    'label' => 'Attendance late',
                     'data' => $data,
                 ],
             ],

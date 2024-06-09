@@ -80,6 +80,7 @@ class PayrollResource extends Resource implements HasShieldPermissions
                                     ->where('date_work', '<=', $dateArrayResult['date1'])
                                     ->count('*');
 
+                                    
                                     $total_present = AttendanceIn::where('user_id', $state)
                                     ->whereYear('created_at', date('Y'))
                                     ->whereMonth('created_at', date('m'))
@@ -90,49 +91,56 @@ class PayrollResource extends Resource implements HasShieldPermissions
                                     })
                                     ->count('*');
 
-                                    $total_late = AttendanceIn::where('user_id', $state)
-                                    ->where('status', 'late')
-                                    ->whereYear('created_at', date('Y'))
-                                    ->whereMonth('created_at', date('m'))
-                                    ->whereHas('pulang', function ($query) {
-                                        $query
+                                    if($total_schedule <= $total_present){
+                                        Notification::make()
+                                        ->title('There is an anomaly in the data, the absence schedule data must not have a total number less than the number of attendance. If this happens, then recheck the absence schedule data created with the saved absence data and make sure there are no data errors!')
+                                        ->danger()
+                                        ->send();
+                                    }else{
+                                        $total_late = AttendanceIn::where('user_id', $state)
+                                        ->where('status', 'late')
                                         ->whereYear('created_at', date('Y'))
-                                        ->whereMonth('created_at', date('m'));
-                                    })
-                                    ->count('*');
+                                        ->whereMonth('created_at', date('m'))
+                                        ->whereHas('pulang', function ($query) {
+                                            $query
+                                            ->whereYear('created_at', date('Y'))
+                                            ->whereMonth('created_at', date('m'));
+                                        })
+                                        ->count('*');
 
-                                    $total_unlate = AttendanceIn::where('user_id', $state)
-                                    ->where('status', 'unlate')
-                                    ->whereYear('created_at', date('Y'))
-                                    ->whereMonth('created_at', date('m'))
-                                    ->whereHas('pulang', function ($query) {
-                                        $query
+                                        $total_unlate = AttendanceIn::where('user_id', $state)
+                                        ->where('status', 'unlate')
                                         ->whereYear('created_at', date('Y'))
-                                        ->whereMonth('created_at', date('m'));
-                                    })
-                                    ->count('*');
+                                        ->whereMonth('created_at', date('m'))
+                                        ->whereHas('pulang', function ($query) {
+                                            $query
+                                            ->whereYear('created_at', date('Y'))
+                                            ->whereMonth('created_at', date('m'));
+                                        })
+                                        ->count('*');
 
-                                    $total_early = AttendanceIn::where('user_id', $state)
-                                    ->where('status', 'early')
-                                    ->whereYear('created_at', date('Y'))
-                                    ->whereMonth('created_at', date('m'))
-                                    ->whereHas('pulang', function ($query) {
-                                        $query
+                                        $total_early = AttendanceIn::where('user_id', $state)
+                                        ->where('status', 'early')
                                         ->whereYear('created_at', date('Y'))
-                                        ->whereMonth('created_at', date('m'));
-                                    })
-                                    ->count('*');
+                                        ->whereMonth('created_at', date('m'))
+                                        ->whereHas('pulang', function ($query) {
+                                            $query
+                                            ->whereYear('created_at', date('Y'))
+                                            ->whereMonth('created_at', date('m'));
+                                        })
+                                        ->count('*');
 
-                                    $user = User::find($state);
+                                        $user = User::find($state);
+                                        $rp = $total_schedule === 0 ? $total_schedule / (float)$user->total_salary : (float)$user->total_salary / $total_schedule;
+                                        $subtotal_payroll = round($rp * $total_present, 2);
 
-                                    $subtotal_payroll = round(((float)$user->total_salary / (int)$total_schedule)*(int)$total_present, 2);
-
-                                    $set('total_schedule', $total_schedule);
-                                    $set('total_present', $total_present);
-                                    $set('total_late', $total_late);
-                                    $set('total_unlate', $total_unlate);
-                                    $set('total_early', $total_early);
-                                    $set('subtotal_payroll', $subtotal_payroll);
+                                        $set('total_schedule', $total_schedule);
+                                        $set('total_present', $total_present);
+                                        $set('total_late', $total_late);
+                                        $set('total_unlate', $total_unlate);
+                                        $set('total_early', $total_early);
+                                        $set('subtotal_payroll', $subtotal_payroll);
+                                    }
                                 }
                             }else{
                                 $set('user_id', null);

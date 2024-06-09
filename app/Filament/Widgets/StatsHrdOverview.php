@@ -6,6 +6,8 @@ use App\Models\Departement;
 use App\Models\Level;
 use App\Models\PermissionForm;
 use App\Models\Position;
+use App\Models\User;
+use App\Models\UserAttGroupSchedule;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Carbon\CarbonPeriod;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -23,7 +25,24 @@ class StatsHrdOverview extends BaseWidget
         $pst = $this->parsingData(Position::class);
         $lvl = $this->parsingData(Level::class);
         $pf = $this->parsingData(PermissionForm::class);
+        
+        $next_day = date('Y-m-d', strtotime(date('Y-m-d') . ' +1 day'));
+        $pay = User::where('join_at', $next_day)->count();
+        $start = Carbon::now()->firstOfMonth();
+        $end = Carbon::now()->lastOfMonth();
+        $sch = UserAttGroupSchedule::where(function($q)use($start, $end){
+            $q
+            ->where('date_work', '>=', $start->toDateString())
+            ->where('date_work', '<=', $end->toDateString());
+        })->count();
+
         return [
+            Stat::make('Total employees paid tomorrow', $pay.' Total payroll')
+                ->description(date("d F Y", strtotime($next_day)).' Payroll Employees')
+                ->color('warning'),
+            Stat::make('Total employees schedule', $sch.' Total schedules')
+                ->description(date("d F Y", strtotime($start)).' Sampai dengan '.date("d F Y", strtotime($end)))
+                ->color('error'),
             Stat::make('Job Departement total', $dept['count'])
                 ->description($dept['count'].' increase')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
