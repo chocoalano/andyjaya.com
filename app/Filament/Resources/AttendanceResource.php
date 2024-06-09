@@ -136,17 +136,17 @@ class AttendanceResource extends Resource implements HasShieldPermissions
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lat')
                     ->label('Latitude')
-                    ->description(fn (AttendanceIn $record): string => !is_null($record->pulang->lat) ? $record->pulang->lat :'Belum Pulang')
+                    ->description(fn (AttendanceIn $record): string => $record->pulang->lat ?? 'Belum Pulang')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lng')
                     ->label('Longitude')
-                    ->description(fn (AttendanceIn $record): string => !is_null($record->pulang->lng) ? $record->pulang->lng :'Belum Pulang')
+                    ->description(fn (AttendanceIn $record): string => $record->pulang->lng ?? 'Belum Pulang')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('time')
-                    ->description(fn (AttendanceIn $record): string => !is_null($record->pulang->time) ? $record->pulang->time :'Belum Pulang'),
+                    ->description(fn (AttendanceIn $record): string => $record->pulang->time ?? 'Belum Pulang'),
                 Tables\Columns\TextColumn::make('status')
                     ->searchable()
-                    ->description(fn (AttendanceIn $record): string => !is_null($record->pulang->status) ? $record->pulang->status :'Belum Pulang'),
+                    ->description(fn (AttendanceIn $record): string => $record->pulang->status ?? 'Belum Pulang'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
