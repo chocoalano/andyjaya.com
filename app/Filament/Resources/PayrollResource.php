@@ -77,7 +77,7 @@ class PayrollResource extends Resource implements HasShieldPermissions
                                 if($userGroup){
                                     $total_schedule = UserAttGroupSchedule::where('user_att_group_id', $userGroup->id)
                                     ->where('date_work', '>=', $dateArrayResult['date1'])
-                                    ->where('date_work', '<=', $dateArrayResult['date1'])
+                                    ->where('date_work', '<=', $dateArrayResult['date2'])
                                     ->count('*');
                                     dd($total_schedule);
                                     $total_present = AttendanceIn::where('user_id', $state)
