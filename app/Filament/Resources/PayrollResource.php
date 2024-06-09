@@ -67,6 +67,7 @@ class PayrollResource extends Resource implements HasShieldPermissions
                                 $userGroup = UserAttGroup::whereHas('userTeams', function ($query) use ($state) {
                                     $query->where('user_id', $state);
                                 })->first();
+                                dd($userGroup);
                                 $dateArray = explode(" - ", $periode);
                                 $date1 = DateTime::createFromFormat('d/m/Y', $dateArray[0])->format('Y-m-d');
                                 $date2 = DateTime::createFromFormat('d/m/Y', $dateArray[1])->format('Y-m-d');
