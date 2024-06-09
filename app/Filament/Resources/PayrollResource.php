@@ -93,7 +93,7 @@ class PayrollResource extends Resource implements HasShieldPermissions
 
                                     if($total_schedule <= $total_present){
                                         Notification::make()
-                                        ->title('There is an anomaly in the data, the absence schedule data must not have a total number less than the number of attendance. If this happens, then recheck the absence schedule data created with the saved absence data and make sure there are no data errors!')
+                                        ->title("There is an anomaly in the data, the absence schedule data must not have a total number less than the number of attendance. If this happens, then recheck the absence schedule data created with the saved absence data and make sure there are no data errors! total schedule: $total_schedule||total presence: $total_present")
                                         ->danger()
                                         ->send();
                                     }else{
