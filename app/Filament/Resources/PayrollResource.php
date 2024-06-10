@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PayrollResource\Pages;
 use App\Filament\Resources\PayrollResource\RelationManagers;
 use App\Models\AttendanceIn;
+use App\Models\MoneyLoan;
 use App\Models\Payroll;
 use App\Models\User;
 use App\Models\UserAttGroup;
@@ -131,13 +132,23 @@ class PayrollResource extends Resource implements HasShieldPermissions
                                         $user = User::find($state);
                                         $rp = $total_schedule === 0 ? $total_schedule / (float)$user->total_salary : (float)$user->total_salary / $total_schedule;
                                         $subtotal_payroll = round($rp * $total_present, 2);
-
+                                        
+                                        $cekPinjaman = MoneyLoan::where('user_id', $user->id)->sum('total_loan');
                                         $set('total_schedule', $total_schedule);
                                         $set('total_present', $total_present);
                                         $set('total_late', $total_late);
                                         $set('total_unlate', $total_unlate);
                                         $set('total_early', $total_early);
                                         $set('subtotal_payroll', $subtotal_payroll);
+                                        $component = [];
+                                        if($cekPinjaman > 0){
+                                            array_push($component, [
+                                                'title'=>'loan',
+                                                'operator'=>'minus',
+                                                'amount'=>$cekPinjaman
+                                            ]);
+                                        }
+                                        $set('components', $component);
                                     }
                                 }
                             }else{
@@ -229,8 +240,16 @@ class PayrollResource extends Resource implements HasShieldPermissions
                     ->searchable()
                     ->numeric()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('start_periode')
+                    ->since()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('end_periode')
+                    ->since()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                    ->date()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')

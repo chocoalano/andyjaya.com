@@ -108,8 +108,7 @@
                     <table>
                         <tr>
                             <td class="title">
-                                <img src="{{ public_path("logo.png") }}"
-                                    style="width: 100%; max-width: 100px" />
+                                <img src="{{ public_path('logo.png') }}" style="width: 100%; max-width: 100px" />
                             </td>
 
                             <td>
@@ -171,12 +170,14 @@
                 <td>Price</td>
             </tr>
             @php
-                function format_rupiah($number) {
+                function format_rupiah($number)
+                {
                     $formatted_number = number_format($number, 2, ',', '.');
                     $formatted_number = 'Rp ' . $formatted_number;
                     return $formatted_number;
                 }
-                function operator($opr) {
+                function operator($opr)
+                {
                     switch ($opr) {
                         case 'minus':
                             return '(-)';
@@ -190,23 +191,35 @@
                         case 'times':
                             return '(x)';
                             break;
-                        
+
                         default:
                             return $opr;
                             break;
                     }
                 }
-            @endphp 
+            @endphp
             <tr class="item">
                 <td>Subtotal</td>
                 <td>{{ format_rupiah($data->subtotal_payroll) }}</td>
             </tr>
-            @foreach ($component as $k => $v)
-            <tr class="item">
-                <td>{{ $v->title }}</td>
-                <td>{{ operator($v->operator) }} {{ format_rupiah($v->amount) }}</td>
-            </tr>
-            @endforeach
+            @if ($permissionForm)
+                @foreach ($permissionForm as $k => $v)
+                    <tr class="item">
+                        <td>{{ ucfirst($v->request_type) }} from: {{ $v->from_date }}, to: {{ $v->to_date }}</td>
+                        <td></td>
+                    </tr>
+                @endforeach
+            @endif
+
+            @if ($component)
+                @foreach ($component as $k => $v)
+                    <tr class="item">
+                        <td>{{ ucfirst($v->title) }}</td>
+                        <td>{{ operator($v->operator) }} {{ format_rupiah($v->amount) }}</td>
+                    </tr>
+                @endforeach
+            @endif
+
             <tr class="total">
                 <td></td>
                 <td>Total: {{ format_rupiah($data->total_payroll) }}</td>

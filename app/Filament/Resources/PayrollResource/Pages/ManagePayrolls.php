@@ -7,6 +7,7 @@ use App\Models\Payroll;
 use App\Models\PayrollComponent;
 use DateTime;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -19,10 +20,12 @@ class ManagePayrolls extends ManageRecords
     {
         return [
             Actions\CreateAction::make()
+            ->successNotification(null)
             ->using(function (array $data, string $model): Model {
                 $dateArray = explode(" - ", $data['periode']);
                 $start = DateTime::createFromFormat('d/m/Y', $dateArray[0])->format('Y-m-d');
                 $end = DateTime::createFromFormat('d/m/Y', $dateArray[1])->format('Y-m-d');
+                $q = new Payroll();
                 try {
                     DB::beginTransaction();
                     $total = $data['subtotal_payroll'];
@@ -37,32 +40,49 @@ class ManagePayrolls extends ManageRecords
                             $total = round($total * $key['amount'], 2);
                         }
                     }
-                    $q = new Payroll();
-                    $q->user_id = $data['user_id'];
-                    $q->start_periode = $start;
-                    $q->end_periode = $end;
-                    $q->total_schedule = $data['total_schedule'];
-                    $q->total_present = $data['total_present'];
-                    $q->total_late = $data['total_late'];
-                    $q->total_unlate = $data['total_unlate'];
-                    $q->total_early = $data['total_early'];
-                    $q->subtotal_payroll = $data['subtotal_payroll'];
-                    $q->total_payroll = $total;
-                    $q->save();
-                    foreach ($data['components'] as $k) {
-                        $p = new PayrollComponent();
-                        $p->title = $k['title'];
-                        $p->operator = $k['operator'];
-                        $p->amount = $k['amount'];
-                        $q->component()->save($p);
-                    }
+
+                    $cek = Payroll::where('user_id', $data['user_id'])
+                        ->whereDate('end_periode', '<=', $end)
+                        ->count();
+                        if($cek < 1){
+                            $q->user_id = $data['user_id'];
+                            $q->start_periode = $start;
+                            $q->end_periode = $end;
+                            $q->total_schedule = $data['total_schedule'];
+                            $q->total_present = $data['total_present'];
+                            $q->total_late = $data['total_late'];
+                            $q->total_unlate = $data['total_unlate'];
+                            $q->total_early = $data['total_early'];
+                            $q->subtotal_payroll = $data['subtotal_payroll'];
+                            $q->total_payroll = $total;
+                            $q->save();
+                            foreach ($data['components'] as $k) {
+                                $p = new PayrollComponent();
+                                $p->title = $k['title'];
+                                $p->operator = $k['operator'];
+                                $p->amount = $k['amount'];
+                                $q->component()->save($p);
+                            }
+                            Notification::make()
+                            ->title('Saved successfully')
+                            ->successa()
+                            ->send();
+                        }
+                        Notification::make()
+                        ->title('Saved unsuccessfully')
+                        ->body('Data for this period already exists!')
+                        ->danger()
+                        ->send();
                     DB::commit();
-                    return $q;
                 } catch (\Exception $e) {
-                    // If an exception occurs, rollback the transaction
                     DB::rollback();
-                    dd($e->getMessage());
+                    Notification::make()
+                        ->title('Saved unsuccessfully')
+                        ->body($e->getMessage())
+                        ->danger()
+                        ->send();
                 }
+                return $q;
             }),
         ];
     }
