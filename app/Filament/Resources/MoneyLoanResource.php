@@ -3,9 +3,9 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\MoneyLoanResource\Pages;
-use App\Filament\Resources\MoneyLoanResource\RelationManagers;
 use App\Models\MoneyLoan;
 use App\Models\User;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -15,11 +15,9 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 
-class MoneyLoanResource extends Resource
+class MoneyLoanResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = MoneyLoan::class;
 
