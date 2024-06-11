@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PayrollResource\Pages;
 
 use App\Filament\Resources\PayrollResource;
+use App\Models\MoneyLoan;
 use App\Models\Payroll;
 use App\Models\PayrollComponent;
 use DateTime;
@@ -63,17 +64,28 @@ class ManagePayrolls extends ManageRecords
                                 $p->amount = $k['amount'];
                                 $q->component()->save($p);
                             }
+                            MoneyLoan::where(function($query)use($data, $start, $end){
+                                $query
+                                    ->where('user_id', $data['user_id'])
+                                    ->where('status', 'unpaid')
+                                    ->where('created_at', '>=', $start)
+                                    ->where('created_at', '<=', $end);
+                            })->update([
+                                'status'=>'paid'
+                            ]);
                             Notification::make()
                             ->title('Saved successfully')
-                            ->successa()
+                            ->success()
                             ->send();
+                            DB::commit();
+                        }else{
+                            Notification::make()
+                            ->title('Saved unsuccessfully')
+                            ->body('Data for this period already exists!')
+                            ->danger()
+                            ->send();
+                            DB::rollback();
                         }
-                        Notification::make()
-                        ->title('Saved unsuccessfully')
-                        ->body('Data for this period already exists!')
-                        ->danger()
-                        ->send();
-                    DB::commit();
                 } catch (\Exception $e) {
                     DB::rollback();
                     Notification::make()

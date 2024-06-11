@@ -17,6 +17,7 @@ return new class extends Migration
             $table->enum('status_hr', ['waiting', 'approved', 'rejected'])->default('waiting');
             $table->longText('notes');
             $table->double('total_loan');
+            $table->enum('status', ['paid', 'unpaid'])->default('unpaid');
             $table->timestamps();
         });
     }

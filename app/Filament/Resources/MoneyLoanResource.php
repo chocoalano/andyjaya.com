@@ -46,12 +46,6 @@ class MoneyLoanResource extends Resource implements HasShieldPermissions
     {
         return $form
             ->schema([
-                Select::make('user_id')
-                    ->label('Choose User')
-                    ->searchable()
-                    ->preload()
-                    ->relationship('user', 'name')
-                    ->required(),
                 TextInput::make('total_loan')
                     ->required()
                     ->minValue(5000)
@@ -72,7 +66,7 @@ class MoneyLoanResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('user.name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status_hr')
-                    ->label('Status')
+                    ->label('Status Approved')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'waiting' => 'warning',
@@ -80,9 +74,18 @@ class MoneyLoanResource extends Resource implements HasShieldPermissions
                         'rejected' => 'danger',
                     })
                     ->searchable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'paid' => 'success',
+                        'unpaid' => 'danger',
+                    })
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('notes')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('total_loan')
+                    ->money('idr')
                     ->searchable(),
             ])
             ->filters([

@@ -14,7 +14,8 @@ class MoneyLoan extends Model
         'user_id',
         'status_hr',
         'notes',
-        'total_loan'
+        'total_loan',
+        'status'
     ];
     public function user(): BelongsTo
     {
