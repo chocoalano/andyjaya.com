@@ -126,7 +126,7 @@
                     <table>
                         <tr>
                             <td>
-                                PT. Andy Jaya, Acc.<br />
+                                CV. Andy Jaya, Acc.<br />
                                 Jl.Citra raya utama timur ciakar, Panongan,<br />
                                 Tangerang regency, banten.
                             </td>
