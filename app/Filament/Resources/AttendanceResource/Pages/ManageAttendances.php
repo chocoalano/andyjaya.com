@@ -118,7 +118,7 @@ class ManageAttendances extends ManageRecords
                             $dist = rad2deg($dist);
                             $miles = $dist * 60 * 1.1515;
                             $meters = round($miles * 1609.344, 2);
-                            // if((float)$meters < (float)$areaDetail->radius){
+                            if((float)$meters < (float)$areaDetail->radius){
                                 $waktu_masuk_seharusnya = new DateTime($c->in);
                                 $waktu_masuk_sebenarnya = new DateTime($data['time']);
                                 $selisih = $waktu_masuk_sebenarnya->diff($waktu_masuk_seharusnya);
@@ -155,12 +155,12 @@ class ManageAttendances extends ManageRecords
                                     ->title('Presence successfuly')
                                     ->success()
                                     ->send();
-                            // }else{
-                            //     Notification::make()
-                            //         ->title('The absence radius distance is insufficient, the minimum absence radius distance is '.$areaDetail->radius.' meters.')
-                            //         ->danger()
-                            //         ->send();
-                            // }
+                            }else{
+                                Notification::make()
+                                    ->title('The absence radius distance is insufficient, the minimum absence radius distance is '.$areaDetail->radius.' meters.')
+                                    ->danger()
+                                    ->send();
+                            }
                         }else{
                             Notification::make()
                                 ->title('Location is not available/invalid location for this user')
