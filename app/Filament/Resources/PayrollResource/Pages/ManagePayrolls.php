@@ -31,18 +31,19 @@ class ManagePayrolls extends ManageRecords
                     DB::beginTransaction();
                     $total = $data['subtotal_payroll'];
                     foreach ($data['components'] as $key) {
-                        if ($key['operator'] === 'plus') {
+                        if ($key['title'] !== 'cuti' && $key['title'] !== 'present-late' & $key['title'] !== 'sick' & $key['title'] !== 'not-present' & $key['operator'] === 'plus') {
                             $total += $key['amount'];
-                        }elseif ($key['operator'] === 'minus') {
+                        }elseif ($key['title'] !== 'cuti' && $key['title'] !== 'present-late' & $key['title'] !== 'sick' & $key['title'] !== 'not-present' & $key['operator'] === 'minus') {
                             $total -= $key['amount'];
-                        }elseif ($key['operator'] === 'devide') {
+                        }elseif ($key['title'] !== 'cuti' && $key['title'] !== 'present-late' & $key['title'] !== 'sick' & $key['title'] !== 'not-present' & $key['operator'] === 'devide') {
                             $total = round($total / $key['amount'], 2);
-                        }elseif ($key['operator'] === 'times') {
+                        }elseif ($key['title'] !== 'cuti' && $key['title'] !== 'present-late' & $key['title'] !== 'sick' & $key['title'] !== 'not-present' & $key['operator'] === 'times') {
                             $total = round($total * $key['amount'], 2);
                         }
                     }
 
                     $cek = Payroll::where('user_id', $data['user_id'])
+                        ->whereDate('start_periode', '>=', $start)
                         ->whereDate('end_periode', '<=', $end)
                         ->count();
                         if($cek < 1){

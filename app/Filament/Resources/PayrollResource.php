@@ -5,8 +5,10 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PayrollResource\Pages;
 use App\Filament\Resources\PayrollResource\RelationManagers;
 use App\Models\AttendanceIn;
+use App\Models\FormPaidLeave;
 use App\Models\MoneyLoan;
 use App\Models\Payroll;
+use App\Models\PermissionForm;
 use App\Models\User;
 use App\Models\UserAttGroup;
 use App\Models\UserAttGroupSchedule;
@@ -21,6 +23,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\DB;
 use Malzariey\FilamentDaterangepickerFilter\Fields\DateRangePicker;
 use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 
@@ -80,14 +83,15 @@ class PayrollResource extends Resource implements HasShieldPermissions
                                     ->where('date_work', '>=', $dateArrayResult['date1'])
                                     ->where('date_work', '<=', $dateArrayResult['date2'])
                                     ->count('*');
-                                    $total_present = AttendanceIn::where('user_id', $state)
-                                    ->whereYear('created_at', date('Y'))
-                                    ->whereMonth('created_at', date('m'))
-                                    ->whereHas('pulang', function ($query) {
-                                        $query
-                                        ->whereYear('created_at', date('Y'))
-                                        ->whereMonth('created_at', date('m'));
-                                    })
+                                    $date = new DateTime('2024-07-01');
+                                    $year = $date->format('Y');
+                                    $month = $date->format('m');
+                                    $total_present = DB::table('attendances_in as ai')
+                                    ->join('attendances_out as ao', 'ai.id', '=', 'ao.att_id')
+                                    ->join('att_group_schedule as ags', 'ai.att_group_schedule_id', '=', 'ags.id')
+                                    ->whereYear('ags.date_work', '2024')
+                                    ->whereMonth('ags.date_work', '07')
+                                    ->select('ai.*', 'ao.*', 'ags.*')
                                     ->count('*');
 
                                     if($total_schedule <= $total_present){
@@ -98,34 +102,34 @@ class PayrollResource extends Resource implements HasShieldPermissions
                                     }else{
                                         $total_late = AttendanceIn::where('user_id', $state)
                                         ->where('status', 'late')
-                                        ->whereYear('created_at', date('Y'))
-                                        ->whereMonth('created_at', date('m'))
-                                        ->whereHas('pulang', function ($query) {
+                                        ->whereYear('created_at', $year)
+                                        ->whereMonth('created_at', $month)
+                                        ->whereHas('pulang', function ($query) use ($year, $month){
                                             $query
-                                            ->whereYear('created_at', date('Y'))
-                                            ->whereMonth('created_at', date('m'));
+                                            ->whereYear('created_at', $year)
+                                            ->whereMonth('created_at', $month);
                                         })
                                         ->count('*');
 
                                         $total_unlate = AttendanceIn::where('user_id', $state)
                                         ->where('status', 'unlate')
-                                        ->whereYear('created_at', date('Y'))
-                                        ->whereMonth('created_at', date('m'))
-                                        ->whereHas('pulang', function ($query) {
+                                        ->whereYear('created_at', $year)
+                                        ->whereMonth('created_at', $month)
+                                        ->whereHas('pulang', function ($query) use ($year, $month) {
                                             $query
-                                            ->whereYear('created_at', date('Y'))
-                                            ->whereMonth('created_at', date('m'));
+                                            ->whereYear('created_at', $year)
+                                            ->whereMonth('created_at', $month);
                                         })
                                         ->count('*');
 
                                         $total_early = AttendanceIn::where('user_id', $state)
                                         ->where('status', 'early')
-                                        ->whereYear('created_at', date('Y'))
-                                        ->whereMonth('created_at', date('m'))
-                                        ->whereHas('pulang', function ($query) {
+                                        ->whereYear('created_at', $year)
+                                        ->whereMonth('created_at', $month)
+                                        ->whereHas('pulang', function ($query) use ($year, $month) {
                                             $query
-                                            ->whereYear('created_at', date('Y'))
-                                            ->whereMonth('created_at', date('m'));
+                                            ->whereYear('created_at', $year)
+                                            ->whereMonth('created_at', $month);
                                         })
                                         ->count('*');
 
@@ -134,6 +138,20 @@ class PayrollResource extends Resource implements HasShieldPermissions
                                         $subtotal_payroll = round($rp * $total_present, 2);
                                         
                                         $cekPinjaman = MoneyLoan::where('user_id', $user->id)->sum('total_loan');
+                                        $cekCuti = FormPaidLeave::where('user_id', $user->id)
+                                        ->whereYear('from_date', $year)
+                                        ->whereMonth('from_date', $month)
+                                        ->count('*');
+                                        $cekIzin = PermissionForm::selectRaw("
+                                            SUM(CASE WHEN request_type = 'present-late' THEN 1 ELSE 0 END) AS jumlah_izin_datang_telat,
+                                            SUM(CASE WHEN request_type = 'sick' THEN 1 ELSE 0 END) AS jumlah_izin_sakit,
+                                            SUM(CASE WHEN request_type = 'not-present' THEN 1 ELSE 0 END) AS jumlah_tidak_masuk_kerja
+                                        ")
+                                        ->where('user_id', $user->id)
+                                        ->where('status_hr', 'approved')
+                                        ->whereYear('from_date', $year)
+                                        ->whereMonth('from_date', $month)
+                                        ->first();
                                         $set('total_schedule', $total_schedule);
                                         $set('total_present', $total_present);
                                         $set('total_late', $total_late);
@@ -146,6 +164,38 @@ class PayrollResource extends Resource implements HasShieldPermissions
                                                 'title'=>'loan',
                                                 'operator'=>'minus',
                                                 'amount'=>$cekPinjaman
+                                            ]);
+                                        }
+                                        if((int)$cekIzin->jumlah_izin_datang_telat > 0){
+                                            array_push($component, [
+                                                'title'=>'present-late',
+                                                'operator'=>'minus',
+                                                'amount'=>0
+                                                // 'amount'=>(int)$cekIzin->jumlah_izin_datang_telat
+                                            ]);
+                                        }
+                                        if((int)$cekIzin->jumlah_izin_sakit > 0){
+                                            array_push($component, [
+                                                'title'=>'sick',
+                                                'operator'=>'minus',
+                                                'amount'=>0
+                                                // 'amount'=>(int)$cekIzin->jumlah_izin_sakit
+                                            ]);
+                                        }
+                                        if((int)$cekIzin->jumlah_tidak_masuk_kerja > 0){
+                                            array_push($component, [
+                                                'title'=>'not-present',
+                                                'operator'=>'minus',
+                                                'amount'=>0
+                                                // 'amount'=>(int)$cekIzin->jumlah_tidak_masuk_kerja
+                                            ]);
+                                        }
+                                        if((int)$cekCuti > 0){
+                                            array_push($component, [
+                                                'title'=>'cuti',
+                                                'operator'=>'minus',
+                                                'amount'=>0
+                                                // 'amount'=>(int)$cekIzin->jumlah_tidak_masuk_kerja
                                             ]);
                                         }
                                         $set('components', $component);
